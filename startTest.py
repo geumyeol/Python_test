@@ -37,7 +37,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 id = '1004gmyoul@naver.com'
-password = 'qhdksdls!2'
+password = '--'
 sendEmail = '1004gmyoul@naver.com'
 subject = '[오늘의 날씨]'
 text = print_str
@@ -68,7 +68,7 @@ smtp.quit()
 #
 # def sendMail(me, you, msg):
 #     smtp = smtplib.SMTP_SSL('smtp.naver.com', 587)
-#     smtp.login(me, 'qhdksdls!2')
+#     smtp.login(me, '--')
 #     msg = MIMEText(msg)
 #     msg['Subject'] = 'TEST'
 #     smtp.sendmail(me, you, msg.as_string())
@@ -86,7 +86,7 @@ smtp.quit()
 # msg['From'] = 'gmyoul@gmail.com'       # 송신 메일
 # msg['To'] = 'gy.ryu@lotte.net'        # 수신 메일
 # with smtplib.SMTP_SSL('smtp.gmail.com') as smtp: # (*)
-#  smtp.login('gmyoul@gmail.com','qhdksdls!2')           # (**)
+#  smtp.login('gmyoul@gmail.com','--')           # (**)
 #  smtp.send_message(msg)
 
 #
