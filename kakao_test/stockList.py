@@ -15,27 +15,46 @@ import pandas as pd
 # import sys
 # sys.stdout = open('naver_stock_1to50.txt', 'w')
 
-def getDataOfParam(stock_name, param):
+PER_BASE = 30
+PBR_BASE = 5
+ROE_BASE = 10
+
+def getDataOfParam(idx, stock_name, param):
 
     data_body = []
+
     sub_tbody = sub_soup.find("table", attrs={"class": "tb_type1 tb_num tb_type1_ifrs"}).find("tbody")
     sub_title = sub_tbody.find("th", attrs={"class": param})
-    result_str = sub_title.get_text().strip()
+    temp_str = sub_title.get_text().strip()
+
     data_body.append(stock_name)
-    data_body.append(result_str)
+    data_body.append(temp_str)
 
     data = sub_tbody.find("td")
-    str = data.get_text().strip()
+    # data_body.append(data.get_text().strip()+"?")
 
-    data_body.append(str)
+    data1 = sub_tbody.find("th", attrs = {"class":param})
+    data2 = data1.next_element.next_element.next_element.next_element
+    data_body.append(data2.get_text().strip())
 
-    for value in data.find_next_siblings():
-        str = value.get_text().strip()
-        result_str += str
-        data_body.append(str)
+    """idx : 0:매출, 1:영업이익, 2:당기순이익, 3:ROE, 4:PER, 5:PBR"""
+    for i, value in enumerate(data2.find_next_siblings()):
 
-    # writer.writerow(result_str)
-    # print(result_str)
+        temp_data = value.get_text().strip()
+        if not temp_data:
+            continue
+
+        if idx == 3 and i==8 and float(temp_data) > ROE_BASE:
+                return
+
+        elif idx == 4 and i==8 and float(temp_data) < PER_BASE:
+                return
+
+        elif idx == 5 and i==8 and float(temp_data) < PBR_BASE:
+                return
+
+
+        data_body.append(temp_data)
 
     # print(data_header)
     print(data_body)
@@ -87,9 +106,10 @@ for stock in stockTop50_corp:
         print(data_header)
 
     ParamList = ['매출액', '영업이익', '당기순이익', 'ROE(지배주주)', 'PER(배)', 'PBR(배)']
-    for pText in ParamList:
+    for idx, pText in enumerate(ParamList):
+
         param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
-        getDataOfParam(stock_name, param)
+        getDataOfParam(idx, stock_name, param)
 
     break
     # writer.writerow(stock_name)
