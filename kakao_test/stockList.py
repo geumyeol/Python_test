@@ -15,6 +15,31 @@ import pandas as pd
 # import sys
 # sys.stdout = open('naver_stock_1to50.txt', 'w')
 
+def getDataOfParam(stock_name, param):
+
+    data_body = []
+    sub_tbody = sub_soup.find("table", attrs={"class": "tb_type1 tb_num tb_type1_ifrs"}).find("tbody")
+    sub_title = sub_tbody.find("th", attrs={"class": param})
+    result_str = sub_title.get_text().strip()
+    data_body.append(stock_name)
+    data_body.append(result_str)
+
+    data = sub_tbody.find("td")
+    str = data.get_text().strip()
+
+    data_body.append(str)
+
+    for value in data.find_next_siblings():
+        str = value.get_text().strip()
+        result_str += str
+        data_body.append(str)
+
+    # writer.writerow(result_str)
+    # print(result_str)
+
+    # print(data_header)
+    print(data_body)
+
 filename = "naver_stock_1to200.csv"
 f = open(filename, "w", encoding="utf-8-sig", newline='')
 writer = csv.writer(f, delimiter='\t')
@@ -34,12 +59,10 @@ stockTop50_corp = soup.find("table", attrs={"class": "type_2"}).find("tbody").fi
 result_str = ""
 
 data_header = ['회사명']
-data_body = []
 idx = 1
 
 for stock in stockTop50_corp:
     stock_name = stock.get_text()
-    data_body.append(stock_name)
     stock_link = "https://finance.naver.com/"+stock["href"]
 
     sub_res = requests.get(stock_link)
@@ -47,13 +70,13 @@ for stock in stockTop50_corp:
 
     sub_thead = sub_soup.find("table", attrs={"class":"tb_type1 tb_num tb_type1_ifrs"}).\
         find("thead").find_all("th", attrs={"scope":"col"})
-    sub_tbody = sub_soup.find("table", attrs={"class":"tb_type1 tb_num tb_type1_ifrs"}).\
-        find("tbody")
+
 
     # print(stock_name)
     if idx==1:
         result_str = sub_soup.find("th", attrs={"class": "h_th2 th_cop_anal5 b_line"}).get_text()
         data_header.append(result_str)
+
         for value in sub_thead:
             str = value.get_text().strip()
             if (str.startswith("20")):
@@ -63,33 +86,17 @@ for stock in stockTop50_corp:
         idx += 1
         print(data_header)
 
+    ParamList = ['매출액', '영업이익', '당기순이익', 'ROE(지배주주)', 'PER(배)', 'PBR(배)']
+    for pText in ParamList:
+        param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
+        getDataOfParam(stock_name, param)
+
+    break
     # writer.writerow(stock_name)
     # writer.writerow(result_str)
     # print(stock_name)
     # print(result_str)
 
-    in_sub = sub_tbody.find("th", attrs={"class": "h_th2 th_cop_anal8"})
-    result_str = in_sub.get_text().strip()
-    data_body.append(result_str)
-
-    data = sub_tbody.find("td")
-    str = data.get_text().strip()
-
-    data_body.append(str)
-
-    for value in data.find_next_siblings():
-        str = value.get_text().strip()
-        result_str += str
-        data_body.append(str)
-
-    # writer.writerow(result_str)
-    # print(result_str)
-
-
-    # print(data_header)
-    print(data_body)
-
-    data_body.clear()
 
 # print(stockTop50[0].get_text())
 """
