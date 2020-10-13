@@ -14,12 +14,13 @@ import pandas as pd
 
 # import sys
 # sys.stdout = open('naver_stock_1to50.txt', 'w')
+Total_Message = []
 
 PER_BASE = 30
 PBR_BASE = 5
 ROE_BASE = 10
 
-def getDataOfParam(idx, stock_name, param):
+def getDataOfParam(index, stock_name, param):
 
     data_body = []
 
@@ -38,26 +39,44 @@ def getDataOfParam(idx, stock_name, param):
     data_body.append(data2.get_text().strip())
 
     """idx : 0:매출, 1:영업이익, 2:당기순이익, 3:ROE, 4:PER, 5:PBR"""
-    for i, value in enumerate(data2.find_next_siblings()):
+    for idx, value in enumerate(data2.find_next_siblings()):
 
+        # print(idx)
         temp_data = value.get_text().strip()
         if not temp_data:
             continue
 
-        if idx == 3 and i==8 and float(temp_data) > ROE_BASE:
-                return
+        if index == 3 and idx==7 :
+            if float(temp_data) > float(ROE_BASE):
+                s = "## [{}] - ROE_BASE:{} 달성 - {}".format(stock_name, ROE_BASE, float(temp_data))
+                Total_Message.append(s)
+                # print(s)
+            else:
+                s = "@@ [{}] - ROE_BASE:{} 미달성 - {}".format(stock_name, ROE_BASE, float(temp_data))
+                Total_Message.append(s)
 
-        elif idx == 4 and i==8 and float(temp_data) < PER_BASE:
-                return
+        elif index == 4 and idx==7 :
+            if float(temp_data) < float(PER_BASE):
+                s = "## [{}] - PER_BASE:{} 달성 - {}".format(stock_name, PER_BASE, float(temp_data))
+                Total_Message.append(s)
+                # print(s)
+            else:
+                s = "@@ [{}] - PER_BASE:{} 미달성 - {}".format(stock_name, PER_BASE, float(temp_data))
+                Total_Message.append(s)
 
-        elif idx == 5 and i==8 and float(temp_data) < PBR_BASE:
-                return
-
+        elif index == 5 and idx==7 :
+            if float(temp_data) < PBR_BASE:
+                s = "## [{}] - PBR_BASE:{} 달성 - {}".format(stock_name, PBR_BASE, float(temp_data))
+                Total_Message.append(s)
+                # print(s)
+            else:
+                s = "@@ [{}] - PBR_BASE:{} 미달성 - {}".format(stock_name, PBR_BASE, float(temp_data))
+                Total_Message.append(s)
 
         data_body.append(temp_data)
 
     # print(data_header)
-    print(data_body)
+    # print(data_body)
 
 filename = "naver_stock_1to200.csv"
 f = open(filename, "w", encoding="utf-8-sig", newline='')
@@ -103,7 +122,7 @@ for stock in stockTop50_corp:
                 data_header.append(str)
 
         idx += 1
-        print(data_header)
+        # print(data_header)
 
     ParamList = ['매출액', '영업이익', '당기순이익', 'ROE(지배주주)', 'PER(배)', 'PBR(배)']
     for idx, pText in enumerate(ParamList):
@@ -111,13 +130,13 @@ for stock in stockTop50_corp:
         param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
         getDataOfParam(idx, stock_name, param)
 
-    break
+    Total_Message.append("")
     # writer.writerow(stock_name)
     # writer.writerow(result_str)
     # print(stock_name)
     # print(result_str)
 
-
+print("\n".join(Total_Message))
 # print(stockTop50[0].get_text())
 """
 for row in stock_list:
