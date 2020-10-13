@@ -1,6 +1,4 @@
-import os
-import json
-import requests
+
 
 """
 #참고 : https://developers.kakao.com/docs/latest/ko/kakaotalk-social/rest-api#get-friends
@@ -8,6 +6,10 @@ import requests
 curl -v -X GET "https://kapi.kakao.com/v1/api/talk/friends?limit=3" \
     -H "Authorization: Bearer {USER_ACCESS_TOKEN}"
 """
+
+import json
+import requests
+
 def getFriendsList():
     header = {"Authorization": 'Bearer ' + KAKAO_TOKEN}
     url = "https://kapi.kakao.com/v1/api/talk/friends" #친구 정보 요청
@@ -17,13 +19,14 @@ def getFriendsList():
     friends_list = result.get("elements")
     friends_id = []
 
+    print(requests.get(url, headers=header).text)
     print(friends_list)
     for friend in friends_list:
         friends_id.append(str(friend.get("uuid")))
 
     return friends_id
 
-KAKAO_TOKEN = "TFS_TBzR5-mX_1-4hQnF0d86AF5v67qAw7UkWgorDR4AAAF1EG9_sQ"  #1004gmyoul
+KAKAO_TOKEN = "uj9WrKnmLkiP--6ZjvJWug0Pz5RoGNdEI1A5Lgo9cpcAAAF1I6l2ew"  #1004gmyoul
 
 
 print(getFriendsList())
