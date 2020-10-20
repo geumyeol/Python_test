@@ -20,6 +20,8 @@ PER_BASE = 30
 PBR_BASE = 5
 ROE_BASE = 10
 
+Request_Count = 0
+
 def getDataOfParam(index, stock_name, param):
 
     data_body = []
@@ -124,22 +126,30 @@ for page_num in range(1,5):
         stock_link = "https://finance.naver.com/"+stock["href"]
         # print(stock_link)
 
-        if str(stock_name).find("KODEX") >= 0 or \
-                str(stock_name).find("맥쿼리인프라") >= 0 or \
-                str(stock_name).find("TIGER") >= 0 or \
-                str(stock_name).find("롯데리츠") >= 0 or \
-                str(stock_name).find("티와이홀딩스") >= 0 or \
-                str(stock_name).find("200") >= 0:
-
-            continue
-
         flag = 1
 
         sub_res = requests.get(stock_link)
         sub_soup = BeautifulSoup(sub_res.text, 'lxml')
 
-        sub_thead = sub_soup.find("table", attrs={"class":"tb_type1 tb_num tb_type1_ifrs"}).\
-            find("thead").find_all("th", attrs={"scope":"col"})
+        sub_thead = sub_soup.find("table", attrs={"class":"tb_type1 tb_num tb_type1_ifrs"})
+
+        if sub_thead is not None:
+            sub_thead = sub_thead.find("thead").find_all("th", attrs={"scope":"col"})
+        else:
+            continue
+        """ 위 코드로 return None 값에 대한 예외처리
+        
+        if str(stock_name).find("KO2DEX") >= 0 or \
+                        str(stock_name).find("맥쿼리인프라") >= 0 or \
+                        str(stock_name).find("TIGER") >= 0 or \
+                        str(stock_name).find("롯데리츠") >= 0 or \
+                        str(stock_name).find("티와이홀딩스") >= 0 or \
+                        str(stock_name).find("제이알글로벌리츠") >= 0 or \
+                        str(stock_name).find("200") >= 0:
+
+                    continue
+                """
+
 
         img_link_list = ['month3', 'year', 'year3']
         img_link = sub_soup.find("img", attrs={"id": "img_chart_area"})['src']
@@ -194,6 +204,7 @@ for page_num in range(1,5):
             continue
 
         if corp_Message:
+            Request_Count += 1
             Total_Message.append("<a href='"+stock_link+"'>"+ stock_name+"</a>")
             Total_Message.extend(corp_Message)
             img1 = img_link.replace("day", img_link_list[0])
@@ -223,9 +234,9 @@ id = '1004gmyoul@naver.com'
 password = 'qhdksdls!2'
 sendEmail = '1004gmyoul@naver.com'
 today = datetime.today().strftime("%Y/%m/%d %H:%M:%S")
-subject = '['+today+' 주식추천 종목]'
+subject = '['+today+' 주식추천 종목]-'+str(Request_Count)+'개 회사'
 text = "<br>".join(Total_Message)
-addrs = ['1004gmyoul@naver.com', 'godshy1611@naver.com']  # send mail list
+addrs = ['1004gmyoul@naver.com', 'gy.ryu@lotte.net']  # send mail list
 
 # login
 smtp = smtplib.SMTP('smtp.naver.com', 587)
