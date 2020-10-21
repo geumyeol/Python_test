@@ -17,7 +17,7 @@ import pandas as pd
 # sys.stdout = open('naver_stock_1to50.txt', 'w')
 
 # Total_Message = []
-stockList = dict()
+stockList = []
 
 PER_BASE = 30
 PBR_BASE = 5
@@ -26,37 +26,25 @@ ROE_BASE = 10
 Request_Count = 0
 
 
-def getDataOfParam(index, stockLink, stockName, param):
-
-    data_body = []
+def getDataOfParam(stock_dict, param):
 
     sub_tbody = sub_soup.find("table", attrs={"class": "tb_type1 tb_num tb_type1_ifrs"}).find("tbody")
-    sub_title = sub_tbody.find("th", attrs={"class": param})
-    temp_str = sub_title.get_text().strip()
+    sub_title = sub_tbody.find("th", attrs={"class": param}).get_text().strip()
 
-    data_body.append(stock_name)
-    data_body.append(temp_str)
+    #param 에 매핑되는 row 검색 => 상위 이동 => 해당 row의 모든 td 컬럼 가져오기
+    dataOfParam = sub_tbody.find("th", attrs = {"class":param}).parent.find_all("td")
 
-    data = sub_tbody.find("td")
-    # data_body.append(data.get_text().strip()+"?")
+    stock_dict[sub_title] = [i.get_text().strip() for i in dataOfParam]
 
-    data1 = sub_tbody.find("th", attrs = {"class":param})
-    data2 = data1.next_element.next_element.next_element.next_element
-    data_body.append(data2.get_text().strip())
+    return stock_dict
 
-    # index : 0:매출, 1:영업이익, 2:당기순이익, 3:ROE, 4:PER, 5:PBR
-    # idx : 0~3 : 연간실적, 4~9 : 최근 분기 실적
+    """for idx, value in enumerate(dataOfParam):
 
-    stock_message=[]
-
-    # print (stock_name, index, data2.get_text().strip())
-
-    stockone = {'name': stockName, 'link': stockLink, 'part':temp_str}
-
-    for idx, value in enumerate(data2.find_next_siblings()):
-
-        # print(idx)
         temp_data = value.get_text().strip()
+
+        stockone[sub_title] = {'part': temp_str}
+
+
         if not temp_data:
             continue
 
@@ -100,17 +88,8 @@ def getDataOfParam(index, stockLink, stockName, param):
         # data_body.append(temp_data)
 
     # return stock_message
-    return stockone
-    # print(data_header)
-    # print(data_body)
+    return stockone"""
 
-# filename = "naver_stock_1to200.csv"
-# f = open(filename, "w", encoding="utf-8-sig", newline='')
-# writer = csv.writer(f, delimiter='\t')
-
-
-
-idx = 1
 Total_Message = []
 
 for page_num in range(1,5):
@@ -131,20 +110,19 @@ for page_num in range(1,5):
 
     data_header = ['회사명']
 
-    for stock in stockTop50_corp:
+    for idx, stock in enumerate(stockTop50_corp):
         corp_Message = []
-        stock_name = stock.get_text()
-        stock_link = "https://finance.naver.com/"+stock["href"]
-        # print(stock_link)
+        stock_dict = dict()
+
+        stock_dict['name'] =stock.get_text()
+        stock_dict['link'] = "https://finance.naver.com/"+stock["href"]
 
         flag = 1
 
-        sub_res = requests.get(stock_link)
+        sub_res = requests.get(stock_dict['link'])
         sub_soup = BeautifulSoup(sub_res.text, 'lxml')
 
         sub_thead = sub_soup.find("table", attrs={"class":"tb_type1 tb_num tb_type1_ifrs"})
-
-
         if sub_thead is not None:
             sub_thead = sub_thead.find("thead").find_all("th", attrs={"scope":"col"})
         else:
@@ -161,39 +139,33 @@ for page_num in range(1,5):
 
                     continue
                 """
-
-
-        img_link_list = ['month3', 'year', 'year3']
-        img_link = sub_soup.find("img", attrs={"id": "img_chart_area"})['src']
-
-        # print(stock_name)
-
-        if idx==1:
-            result_str = sub_soup.find("th", attrs={"class": "h_th2 th_cop_anal5 b_line"}).get_text()
-            data_header.append(result_str)
-
-            for value in sub_thead:
-                str__ = value.get_text().strip()
-                if (str__.startswith("20")):
-                    result_str += str__
-                    data_header.append(str__)
-
-            idx += 1
-            # print(data_header)
-
         ParamList = ['매출액', '영업이익', '당기순이익', 'ROE(지배주주)', 'PER(배)', 'PBR(배)']
         # ParamList = ['ROE(지배주주)', 'PER(배)', 'PBR(배)']
 
         for idx, pText in enumerate(ParamList):
 
+            if sub_soup.find('strong', text=pText) is not None:
+                param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
+            else:
+                continue
+            """ 위 코드로 return None 값에 대한 예외처리"""
+
             param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
             # print (param)
             # result_message = getDataOfParam(idx, stock_link, stock_name, param)
 
+            stock_dict = getDataOfParam(stock_dict, param)
 
-            dict = getDataOfParam(idx, stock_link, stock_name, param)
+        #이미지 링크 추가
+        img_link_list = ['month3', 'year', 'year3']
+        img_link = sub_soup.find("img", attrs={"id": "img_chart_area"})['src']
 
-            print(dict)
+        for img in img_link_list:
+            stock_dict['img_'+img] = img_link.replace("day", img)
+
+        stockList.append(stock_dict)
+        print(stockList[len(stockList) - 1])
+
 """
             corp_Message.extend(result_message)
             if len(result_message) != 0 :
@@ -210,12 +182,7 @@ for page_num in range(1,5):
 
                     break
 
-            # Total_Message.extend(result_message)
-            # print (len(result_message))
-            # print(result_message)
 
-        # img_link_list = ['month3', 'year', 'year3']
-        # img_link = sub_soup.find("img", attrs={"id": "img_chart_area"})['src']
 
         if flag == 0:
 
