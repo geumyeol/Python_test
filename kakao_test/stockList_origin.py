@@ -43,29 +43,29 @@ PER_BASE = 20
 PBR_BASE = 3
 ROE_BASE = 15
 """
-def printRecommendedItems(stockList):
+def printRecommendedItems(stock):
 
-    for stock in stockList:
-        # print(stock['name'])
-        numberPER = 0
-        numberPBR = 0
-        numberROE = 0
+    # print(stock['name'])
+    numberPER = 0
+    numberPBR = 0
+    numberROE = 0
 
-        for idx in range(4, 9):
-            if stock['ROE(지배주주)'][idx] is None or not stock['ROE(지배주주)'][idx] :
-                # print(idx)
-                continue
-            if float(stock['ROE(지배주주)'][idx]) > ROE_BASE:
-                numberROE += 1
-            if float(stock['PER(배)'][idx]) > PER_BASE:
-                numberPER += 1
-            if float(stock['PBR(배)'][idx]) > PBR_BASE:
-                numberPBR += 1
-
-        if numberROE >= 3 and numberPER >= 3 and numberPBR >= 3:
-            print(stock)
-        else:
+    for idx in range(4, 9):
+        if stock['ROE(지배주주)'][idx] is None or not stock['ROE(지배주주)'][idx] :
+            # print(idx)
             continue
+        if float(stock['ROE(지배주주)'][idx]) > ROE_BASE:
+            numberROE += 1
+        if float(stock['PER(배)'][idx]) > PER_BASE:
+            numberPER += 1
+        if float(stock['PBR(배)'][idx]) > PBR_BASE:
+            numberPBR += 1
+
+    if numberROE >= 3 and numberPER >= 3 and numberPBR >= 3:
+        print("< a href = '"+stock['link']+"'> "+ stock['name']+" </a>")
+        print(stock[매])
+    else:
+        continue
 
 
     """for idx, value in enumerate(dataOfParam):
@@ -197,7 +197,7 @@ for page_num in range(1,2):
         stockList.append(stock_dict)
         # print(stockList[len(stockList) - 1])
 
-printRecommendedItems(stockList)
+    printRecommendedItems(stock_dict)
 
 """
             corp_Message.extend(result_message)
