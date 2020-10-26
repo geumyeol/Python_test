@@ -7,6 +7,12 @@
 4. ROE 10 이상
 5. 3개월 / 1년 / 3년
 """
+# E-mail Library
+import smtplib, os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
+
 import csv
 import requests
 import sys
@@ -19,9 +25,9 @@ import pandas as pd
 # Total_Message = []
 stockList = []
 
-PER_BASE = 25
+PER_BASE = 30
 PBR_BASE = 5
-ROE_BASE = 15
+ROE_BASE = 10
 
 Request_Count = 0
 
@@ -50,79 +56,73 @@ def printRecommendedItems(stock):
     numberPBR = 0
     numberROE = 0
 
+    resultString = ""
+
+    # print(stock)
+
     for idx in range(4, 9):
-        if stock['ROE(지배주주)'][idx] is None or not stock['ROE(지배주주)'][idx] :
+        if stock['ROE(지배주주)'][idx] is None or not stock['ROE(지배주주)'][idx] or\
+            stock['PER(배)'][idx] is None or not stock['PER(배)'][idx] or\
+            stock['PBR(배)'][idx] is None or not stock['PBR(배)'][idx] :
             # print(idx)
             continue
-        if float(stock['ROE(지배주주)'][idx]) > ROE_BASE:
+        if float(stock['ROE(지배주주)'][idx].replace(",","")) > ROE_BASE:
             numberROE += 1
-        if float(stock['PER(배)'][idx]) > PER_BASE:
+        if float(stock['PER(배)'][idx].replace(",","")) > PER_BASE:
             numberPER += 1
-        if float(stock['PBR(배)'][idx]) > PBR_BASE:
+        if float(stock['PBR(배)'][idx].replace(",","")) > PBR_BASE:
             numberPBR += 1
 
-    if numberROE >= 3 and numberPER >= 3 and numberPBR >= 3:
-        print("< a href = '"+stock['link']+"'> "+ stock['name']+" </a>")
-        print(stock[매])
-    else:
-        continue
+        if numberROE >= 2 and numberPER >= 2 and numberPBR >= 2:
+            resultString += "<a href = '"+stock['link']+"'> "+str(stock['idx'])+". "+stock['name']+"</a>"
+            resultString += "<br>2017.12	2018.12	2019.12	2020.12(E)	2019.06	2019.09	2019.12	2020.03	2020.06	2020.09(E)"
+            resultString += "<br>매출액 "+" ".join(stock['매출액'])
+            resultString += "<br>당기순이익 " + " ".join(stock['당기순이익'])
+            resultString += "<br>ROE " + " ".join(stock['ROE(지배주주)'])
+            resultString += "<br>PER " + " ".join(stock['PER(배)'])
+            resultString += "<br>PBR " + " ".join(stock['PBR(배)'])
+            resultString += "<br><br><br>[3개월]<br><img src='" + stock['img_month3']+"'>"
+            resultString += "<br><br>[1년]<br><img src='" + stock['img_year']+"'>"
+            resultString += "<br><br>[3년]<br><img src='" + stock['img_year3']+"'>"
 
+            print(resultString)
+            return 1, resultString
 
-    """for idx, value in enumerate(dataOfParam):
-
-        temp_data = value.get_text().strip()
-
-        stockone[sub_title] = {'part': temp_str}
-
-
-        if not temp_data:
+        else:
             continue
 
-        # print(stock_name, temp_str, idx, temp_data)
-        stockone[idx]= temp_data
-        temp_data = temp_data.replace(",", "")
+    return 0, ""
 
-        if index == 0 and idx==7 :
-            if float(temp_data) > float(ROE_BASE):
-                s = "# ROE_BASE:{} 달성 => {}".format( ROE_BASE, float(temp_data))
-                stock_message.append(s)
-                # print(s)
-            else:
-                s = "@@ [{}] - ROE_BASE:{} 미달성 - {}".format(stock_name, ROE_BASE, float(temp_data))
-                stock_message.clear()
-                stock_message.append(s)
-                break
+def sendEmailfunc(text):
+    id = '1004gmyoul@naver.com'
+    password = 'qhdksdls!2'
+    sendEmail = '1004gmyoul@naver.com'
+    today = datetime.today().strftime("%Y/%m/%d %H:%M:%S")
+    subject = '[' + today + ' 주식추천 종목]-' + str(Request_Count) + '개 회사'
+    addrs = ['1004gmyoul@naver.com']  # send mail list
 
-        elif index == 1 and idx==7 :
-            if float(temp_data) < float(PER_BASE):
-                s = "# PER_BASE:{} 달성 => {}".format( PER_BASE, float(temp_data))
-                stock_message.append(s)
-                # print(s)
-            else:
-                s = "@@ [{}] - PER_BASE:{} 미달성 - {}".format(stock_name, PER_BASE, float(temp_data))
-                stock_message.clear()
-                stock_message.append(s)
-                break
+    # login
+    smtp = smtplib.SMTP('smtp.naver.com', 587)
+    smtp.ehlo()
+    smtp.starttls()
+    smtp.login(id, password)
 
-        elif index == 2 and idx==7 :
-            if float(temp_data) < PBR_BASE:
-                s = "# PBR_BASE: {} 달성 => {}".format( PBR_BASE, float(temp_data))
-                stock_message.append(s)
-                # print(s)
-            else:
-                s = "@@ [{}] - PBR_BASE:{} 미달성 - {}".format(stock_name, PBR_BASE, float(temp_data))
-                stock_message.clear()
-                stock_message.append(s)
-                break
+    for addr in addrs:
+        # message
+        message = MIMEMultipart()
+        message.attach(MIMEText(text, 'html'))
 
-        # data_body.append(temp_data)
+        # Send
+        message["From"] = sendEmail
+        message["To"] = addr
+        message['Subject'] = subject
+        smtp.sendmail(sendEmail, addr, message.as_string())
 
-    # return stock_message
-    return stockone"""
+    smtp.quit()
 
-Total_Message = []
+Total_message = ''
 
-for page_num in range(1,2):
+for page_num in range(1,5):
 
     url = "https://finance.naver.com/sise/sise_market_sum.nhn?page="+"%d"%(page_num)
 
@@ -140,11 +140,12 @@ for page_num in range(1,2):
 
     data_header = ['회사명']
 
-    for idx, stock in enumerate(stockTop50_corp):
+    for index, stock in enumerate(stockTop50_corp):
         corp_Message = []
         stock_dict = dict()
 
         stock_dict['name'] =stock.get_text()
+        stock_dict['idx'] = index
         stock_dict['link'] = "https://finance.naver.com/"+stock["href"]
 
         flag = 1
@@ -157,18 +158,8 @@ for page_num in range(1,2):
             sub_thead = sub_thead.find("thead").find_all("th", attrs={"scope":"col"})
         else:
             continue
-        """ 위 코드로 return None 값에 대한 예외처리
-        
-        if str(stock_name).find("KO2DEX") >= 0 or \
-                        str(stock_name).find("맥쿼리인프라") >= 0 or \
-                        str(stock_name).find("TIGER") >= 0 or \
-                        str(stock_name).find("롯데리츠") >= 0 or \
-                        str(stock_name).find("티와이홀딩스") >= 0 or \
-                        str(stock_name).find("제이알글로벌리츠") >= 0 or \
-                        str(stock_name).find("200") >= 0:
+        """ 위 코드로 return None 값에 대한 예외처리"""
 
-                    continue
-        """
 
         ParamList = ['매출액', '영업이익', '당기순이익', 'ROE(지배주주)', 'PER(배)', 'PBR(배)']
         # ParamList = ['ROE(지배주주)', 'PER(배)', 'PBR(배)']
@@ -178,7 +169,9 @@ for page_num in range(1,2):
             if sub_soup.find('strong', text=pText) is not None:
                 param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
             else:
-                continue
+                stock_dict.clear()
+                flag = 0
+                break
             """ 위 코드로 return None 값에 대한 예외처리"""
 
             param = " ".join(sub_soup.find('strong', text=pText).parent['class'])
@@ -187,92 +180,22 @@ for page_num in range(1,2):
 
             stock_dict = getDataOfParam(stock_dict, param)
 
-        #이미지 링크 추가
-        img_link_list = ['month3', 'year', 'year3']
-        img_link = sub_soup.find("img", attrs={"id": "img_chart_area"})['src']
+        if flag == 1:
+            #이미지 링크 추가
+            img_link_list = ['month3', 'year', 'year3']
+            img_link = sub_soup.find("img", attrs={"id": "img_chart_area"})['src']
 
-        for img in img_link_list:
-            stock_dict['img_'+img] = img_link.replace("day", img)
+            for img in img_link_list:
+                stock_dict['img_'+img] = img_link.replace("day", img)
 
-        stockList.append(stock_dict)
-        # print(stockList[len(stockList) - 1])
+            returnFlag, resultStr = printRecommendedItems(stock_dict)
 
-    printRecommendedItems(stock_dict)
+            if returnFlag == 1:
+                Request_Count += 1
+                Total_message += resultStr+"<br>"
+    print("==Complete 50 Corp==")
 
-"""
-            corp_Message.extend(result_message)
-            if len(result_message) != 0 :
-                temp = result_message.pop()
-                if temp.startswith("@@"):
-                    flag = 0
-                    # img1 = img_link.replace("day", img_link_list[0])
-                    # img2 = img_link.replace("day", img_link_list[1])
-                    # img3 = img_link.replace("day", img_link_list[2])
-                    # Total_Message.append(temp)
-                    # Total_Message.append(img1)
-                    # Total_Message.append(img2)
-                    # Total_Message.append(img3)
-
-                    break
+sendEmailfunc(Total_message)
+print(Total_message)
 
 
-
-        if flag == 0:
-
-            continue
-
-        if corp_Message:
-            Request_Count += 1
-            Total_Message.append("<a href='"+stock_link+"'>"+ stock_name+"</a>")
-            Total_Message.extend(corp_Message)
-            img1 = img_link.replace("day", img_link_list[0])
-            img2 = img_link.replace("day", img_link_list[1])
-            img3 = img_link.replace("day", img_link_list[2])
-            Total_Message.append("<br>[3개월]<br><img src='"+img1+"'>")
-            Total_Message.append("[1년]<br><img src='"+img2+"'>")
-            Total_Message.append("[3년]<br><img src='"+img3+"'>")
-            Total_Message.append("")
-
-        # writer.writerow(stock_name)
-        # writer.writerow(result_str)
-        # print(stock_name)
-        # print(result_str)
-        break
-"""
-
-# print("\n".join(Total_Message))
-
-# E-mail 전송
-"""
-import smtplib, os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-
-id = '1004gmyoul@naver.com'
-password = 'qhdksdls!2'
-sendEmail = '1004gmyoul@naver.com'
-today = datetime.today().strftime("%Y/%m/%d %H:%M:%S")
-subject = '['+today+' 주식추천 종목]-'+str(Request_Count)+'개 회사'
-text = "<br>".join(Total_Message)
-addrs = ['1004gmyoul@naver.com', 'gy.ryu@lotte.net']  # send mail list
-
-# login
-smtp = smtplib.SMTP('smtp.naver.com', 587)
-smtp.ehlo()
-smtp.starttls()
-smtp.login(id, password)
-
-for addr in addrs:
-    # message
-    message = MIMEMultipart()
-    message.attach(MIMEText(text, 'html'))
-
-    # Send
-    message["From"] = sendEmail
-    message["To"] = addr
-    message['Subject'] = subject
-    smtp.sendmail(sendEmail, addr, message.as_string())
-
-smtp.quit()
-"""
