@@ -19,9 +19,9 @@ import pandas as pd
 # Total_Message = []
 stockList = []
 
-PER_BASE = 30
+PER_BASE = 25
 PBR_BASE = 5
-ROE_BASE = 10
+ROE_BASE = 15
 
 Request_Count = 0
 
@@ -37,6 +37,36 @@ def getDataOfParam(stock_dict, param):
     stock_dict[sub_title] = [i.get_text().strip() for i in dataOfParam]
 
     return stock_dict
+
+"""
+PER_BASE = 20
+PBR_BASE = 3
+ROE_BASE = 15
+"""
+def printRecommendedItems(stockList):
+
+    for stock in stockList:
+        # print(stock['name'])
+        numberPER = 0
+        numberPBR = 0
+        numberROE = 0
+
+        for idx in range(4, 9):
+            if stock['ROE(지배주주)'][idx] is None or not stock['ROE(지배주주)'][idx] :
+                # print(idx)
+                continue
+            if float(stock['ROE(지배주주)'][idx]) > ROE_BASE:
+                numberROE += 1
+            if float(stock['PER(배)'][idx]) > PER_BASE:
+                numberPER += 1
+            if float(stock['PBR(배)'][idx]) > PBR_BASE:
+                numberPBR += 1
+
+        if numberROE >= 3 and numberPER >= 3 and numberPBR >= 3:
+            print(stock)
+        else:
+            continue
+
 
     """for idx, value in enumerate(dataOfParam):
 
@@ -92,7 +122,7 @@ def getDataOfParam(stock_dict, param):
 
 Total_Message = []
 
-for page_num in range(1,5):
+for page_num in range(1,2):
 
     url = "https://finance.naver.com/sise/sise_market_sum.nhn?page="+"%d"%(page_num)
 
@@ -138,7 +168,8 @@ for page_num in range(1,5):
                         str(stock_name).find("200") >= 0:
 
                     continue
-                """
+        """
+
         ParamList = ['매출액', '영업이익', '당기순이익', 'ROE(지배주주)', 'PER(배)', 'PBR(배)']
         # ParamList = ['ROE(지배주주)', 'PER(배)', 'PBR(배)']
 
@@ -164,7 +195,9 @@ for page_num in range(1,5):
             stock_dict['img_'+img] = img_link.replace("day", img)
 
         stockList.append(stock_dict)
-        print(stockList[len(stockList) - 1])
+        # print(stockList[len(stockList) - 1])
+
+printRecommendedItems(stockList)
 
 """
             corp_Message.extend(result_message)
