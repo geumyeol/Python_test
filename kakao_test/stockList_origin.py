@@ -19,6 +19,8 @@ import sys
 from bs4 import BeautifulSoup
 import pandas as pd
 
+from beautifultable import BeautifulTable
+
 # import sys
 # sys.stdout = open('naver_stock_1to50.txt', 'w')
 
@@ -59,7 +61,7 @@ def printRecommendedItems(stock):
     resultString = ""
 
     # print(stock)
-
+    dataHeader = ['실적', '2017.12','2018.12','2019.12','2020.12(E)','2019.06','2019.09','2019.12','2020.03','2020.06','2020.09(E)']
     for idx in range(4, 9):
         if stock['ROE(지배주주)'][idx] is None or not stock['ROE(지배주주)'][idx] or\
             stock['PER(배)'][idx] is None or not stock['PER(배)'][idx] or\
@@ -74,18 +76,20 @@ def printRecommendedItems(stock):
             numberPBR += 1
 
         if numberROE >= 2 and numberPER >= 2 and numberPBR >= 2:
-            resultString += "<a href = '"+stock['link']+"'> "+str(stock['idx'])+". "+stock['name']+"</a>"
-            resultString += "<br>2017.12	2018.12	2019.12	2020.12(E)	2019.06	2019.09	2019.12	2020.03	2020.06	2020.09(E)"
-            resultString += "<br>매출액 "+" ".join(stock['매출액'])
-            resultString += "<br>당기순이익 " + " ".join(stock['당기순이익'])
-            resultString += "<br>ROE " + " ".join(stock['ROE(지배주주)'])
-            resultString += "<br>PER " + " ".join(stock['PER(배)'])
-            resultString += "<br>PBR " + " ".join(stock['PBR(배)'])
+
+
+            resultString += "<a href = '"+stock['link']+"'> "+str(stock['idx'])+". "+stock['name']+"</a> - 현재가 : "+stock['curCost']
+            resultString += "<table border='1px'><tr><td>"+"<td>".join(dataHeader)+"</tr>"
+            resultString += "<br><tr><td>매출액<td>"+"<td>".join(stock['매출액'])+"</tr>"
+            resultString += "<br><tr><td>당기순이익<td>" + "<td>".join(stock['당기순이익'])+"</tr>"
+            resultString += "<br><tr><td>ROE<td>" + "<td>".join(stock['ROE(지배주주)'])+"</tr>"
+            resultString += "<br><tr><td>PER<td>" + "<td>".join(stock['PER(배)'])+"</tr>"
+            resultString += "<br><tr><td>PBR<td>" + "<td>".join(stock['PBR(배)'])+"</tr></table>"
             resultString += "<br><br><br>[3개월]<br><img src='" + stock['img_month3']+"'>"
             resultString += "<br><br>[1년]<br><img src='" + stock['img_year']+"'>"
             resultString += "<br><br>[3년]<br><img src='" + stock['img_year3']+"'>"
 
-            print(resultString)
+            # print(resultString)
             return 1, resultString
 
         else:
@@ -136,7 +140,6 @@ for page_num in range(1,5):
 
     stock_list = soup.find("table", attrs={"class": "type_2"}).find("tbody").find_all("tr")
     stockTop50_corp = soup.find("table", attrs={"class": "type_2"}).find("tbody").find_all("a", attrs={"class": "tltle"})
-    result_str = ""
 
     data_header = ['회사명']
 
@@ -152,6 +155,11 @@ for page_num in range(1,5):
 
         sub_res = requests.get(stock_dict['link'])
         sub_soup = BeautifulSoup(sub_res.text, 'lxml')
+
+        cur_cost = sub_soup.find("div", attrs={"class":"rate_info"}).find("div", attrs={"class":"today"}).\
+            find("p", attrs={"class":"no_today"}).get_text().strip().split()
+        # print("cur_cost", cur_cost[0], "##")
+        stock_dict['curCost'] = cur_cost[0]
 
         sub_thead = sub_soup.find("table", attrs={"class":"tb_type1 tb_num tb_type1_ifrs"})
         if sub_thead is not None:
