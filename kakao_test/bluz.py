@@ -1,10 +1,15 @@
+import matplotlib
+import numpy as np
 from matplotlib import pyplot as plt
-from scipy.ndimage.filters import gaussian_filter1d
+from time import sleep
+from matplotlib.animation import FuncAnimation
 
-text = "+10.20A, +034.70, 1".replace("+", "").replace("A","")
+
+
+text = "+10.20A, +034.70, 1".replace("A", "")
 value = text.split(',')
 value = list(map(float, value))
-print (value)
+print(value)
 
 electricValues = []
 temperatureValues = []
@@ -19,26 +24,45 @@ temperatureValues.append(20.3)
 electricValues.append(15.2)
 temperatureValues.append(10.9)
 
+# plt.ion()
+
 plt.rc('font', family='Malgun Gothic')
-plt.xlabel("Time")
-plt.ylabel("Degree")
+fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 
+ax[0].plot(electricValues, '--')  # green / dot
+ax[0].plot(electricValues, marker='o')  # green / dot
+ax[0].set_xlabel("Time")
+ax[0].set_ylabel("Degree")
+ax[0].set_title('전류')
 
-plt.subplot(1, 2, 1) # 서브플롯을 나누고 1번 플롯으로 문맥을 전환한다.
-plt.plot(electricValues, '--') # green / dot
-plt.plot(electricValues, 'go') # green / dot
-plt.title('전류')
-
-plt.subplot(1, 2, 2) # 서브플롯을 나누고 1번 플롯으로 문맥을 전환한다.
-plt.grid(True)
-plt.plot(temperatureValues, '-') # blue / dot
-plt.plot(temperatureValues, 'bo') # blue / dot
-plt.title('온도')
+# ax[0].plt.subplot(1, 2, 2) # 서브플롯을 나누고 1번 플롯으로 문맥을 전환한다.
+ax[1].grid(True)
+ax[1].plot(temperatureValues, '-')  # blue / dot
+ax[1].plot(temperatureValues, marker='o')  # blue / dot
+ax[1].set_xlabel("Time")
+ax[1].set_ylabel("Degree")
+ax[1].set_title('온도')
 
 # plt.plot(x, y, 'go')
-relayText = "릴레이 On" if relayValue==1 else "릴레이 Off"
+relayText = "릴레이 On" if relayValue == 1 else "릴레이 Off"
 plt.suptitle('Controller DashBoard : ' + relayText)
 plt.show()
+
+sleep(2)
+
+
+ax[1].plot(electricValues, '--')  # green / dot
+ax[0].plot(temperatureValues, '-')  # blue / dot
+fig.canvas.draw()
+
+# ax[0].plot(electricValues, '--') # green / dot
+# ax[0].plot(electricValues, marker = 'o') # green / dot
+# ax[1].plot(temperatureValues, '-') # blue / dot
+# ax[1].plot(temperatureValues, marker = 'o') # blue / dot
+# # plt.plot(x, y, 'go')
+# relayText = "릴레이 On" if relayValue==1 else "릴레이 Off"
+# plt.suptitle('Controller DashBoard : ' + relayText)
+# plt.show()
 
 """import winreg
 import serial
